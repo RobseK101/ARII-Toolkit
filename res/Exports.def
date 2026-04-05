@@ -1,0 +1,18 @@
+EXPORTS
+	mixerGetNumDevs=fwd_mixerGetNumDevs
+	mixerGetLineInfoA=fwd_mixerGetLineInfoA
+	mixerClose=fwd_mixerClose
+	mixerGetLineControlsA=fwd_mixerGetLineControlsA
+	mixerOpen=fwd_mixerOpen
+	mixerGetControlDetailsA=fwd_mixerGetControlDetailsA
+	mixerSetControlDetails=fwd_mixerSetControlDetails
+	joyGetDevCapsA=fwd_joyGetDevCapsA
+	joyGetPosEx=fwd_joyGetPosEx
+	timeGetTime=fwd_timeGetTime
+	mmioDescend=fwd_mmioDescend
+	mmioCreateChunk=fwd_mmioCreateChunk
+	mmioRead=fwd_mmioRead
+	mmioWrite=fwd_mmioWrite
+	mmioClose=fwd_mmioClose
+	mmioOpenA=fwd_mmioOpenA
+	mmioAscend=fwd_mmioAscend
