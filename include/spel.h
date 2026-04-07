@@ -35,6 +35,15 @@ namespace Offsets
 	constexpr intptr_t FileIO__check_file_on_cdrom = 0x0046CAA0 - imageBaseAddress;
 	constexpr intptr_t FileIO__check_sec_file = 0x0042E2B0 - imageBaseAddress;
 
+	constexpr intptr_t Inifile__get_ini_argument_value_int = 0x00465650 - imageBaseAddress;
+	constexpr intptr_t Inifile__get_ini_argument_value_str = 0x004656A0 - imageBaseAddress;
+	constexpr intptr_t Inifile__get_ini_arguments_online = 0x004654F0 - imageBaseAddress;
+	constexpr intptr_t Inifile__read_ini_string_setting = 0x004654A0 - imageBaseAddress;
+	constexpr intptr_t Inifile__read_ini_value_setting = 0x00465460 - imageBaseAddress;
+	constexpr intptr_t Inifile__set_ini_filename = 0x004652F0 - imageBaseAddress;
+	constexpr intptr_t Inifile__write_ini_string_setting = 0x004653C0 - imageBaseAddress;
+	constexpr intptr_t Inifile__write_ini_value_setting = 00465400 - imageBaseAddress;
+
 	constexpr intptr_t initPlayerCarMov1 = 0x004334AE - imageBaseAddress;
 	constexpr intptr_t initPlayerCarMov2 = 0x004334D0 - imageBaseAddress;
 	constexpr intptr_t initPlayerCarMov3 = 0x0043350D - imageBaseAddress;

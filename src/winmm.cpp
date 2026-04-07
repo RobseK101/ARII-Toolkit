@@ -27,6 +27,7 @@ SOFTWARE.
 #include "Exports.h"
 #include "spel.h"
 #include <ren/Logging.h>
+#include "AR2Inifile.h"
 
 // Big thanks to "Silent" for releasing his ASI Loader as open source and therefore providing a nice way 
 // to patch a binary.
@@ -118,17 +119,31 @@ void ApplyPatches()
 	// Do stuff:
 	ren::Logging::init(new ren::LogfileModule("ren_debug.txt"));
 
+	// Replaces the logger with the new one
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Debug__setDebugOptions, &ren::Logging::setDebugOptions);
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Debug__log, &ren::Logging::log_format);
+
+	// Removes CD checking
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::FileIO__check_file_on_cdrom, &cdeclNull);
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::FileIO__check_sec_file, &cdeclNull);
 
+	// Fixes the startup crash bug
 	PatchMovR32Imm32(moduleBaseAddress + Offsets::initPlayerCarMov1, reinterpret_cast<DWORD>(&strbuf256));
 	PatchMovR32Imm32(moduleBaseAddress + Offsets::initPlayerCarMov2, reinterpret_cast<DWORD>(&strbuf256));
 	PatchMovR32Imm32(moduleBaseAddress + Offsets::initPlayerCarMov3, reinterpret_cast<DWORD>(&strbuf256));
 	PatchMovR32Imm32(moduleBaseAddress + Offsets::initPlayerCarMov4, reinterpret_cast<DWORD>(&strbuf256));
 	PatchMovR32Imm32(moduleBaseAddress + Offsets::initPlayerCarMov5, reinterpret_cast<DWORD>(&strbuf256));
 	PatchMovR32Imm32(moduleBaseAddress + Offsets::initPlayerCarMov6, reinterpret_cast<DWORD>(&strbuf256));
+
+	// Replaces the INI handling facilites
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__get_ini_argument_value_int, &AR2Replacement::getIniArgumentValueInt);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__get_ini_argument_value_str, &AR2Replacement::getIniArgumentValueStr);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__get_ini_arguments_online, &AR2Replacement::getIniArgumentsOnline);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__read_ini_string_setting, &AR2Replacement::readIniStringSetting);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__read_ini_value_setting, &AR2Replacement::readIniValueSetting);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__set_ini_filename, &AR2Replacement::setIniFilename);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__write_ini_string_setting, &AR2Replacement::writeIniStringSetting);
+	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__write_ini_value_setting, &AR2Replacement::writeIniValueSetting);
 
 	MessageBoxA(NULL, "Completed ApplyPatches().", "Debug", MB_OK);
 	return;
