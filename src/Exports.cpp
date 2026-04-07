@@ -25,6 +25,7 @@ SOFTWARE.
 #include "Exports.h"
 #include <Windows.h>
 #include <cstring>
+#include <cstdio>
 
 #define PATCH_DLLNAME "winmm.dll"
 
@@ -42,6 +43,25 @@ typedef MMRESULT(WINAPI* PFN_joyGetDevCapsA)(UINT_PTR uJoyID, LPJOYCAPSA pjc, UI
 typedef MMRESULT(WINAPI* PFN_joyGetPosEx)(UINT uJoyID, LPJOYINFOEX pji);
 typedef DWORD(WINAPI* PFN_timeGetTime)(void);
 */
+
+void checkAndCommitExport(void** _destination, void* _value, const char* _name)
+{
+	if (_value == nullptr) {
+		char msgBuffer[128] = "Exported function check failed.";
+		if (_name) {
+			snprintf(msgBuffer, sizeof(msgBuffer), "Exported function \"%s\" was not found.", _name);
+		}
+		MessageBoxA(NULL, msgBuffer, "Error", MB_OK);
+	}
+	*_destination = _value;
+}
+
+void* getAndCheckExport(HMODULE _dll, const char* _name)
+{
+	void* fnPtr = nullptr;
+	checkAndCommitExport(&fnPtr, GetProcAddress(_dll, _name), _name);
+	return fnPtr;
+}
 
 extern "C" {
 	void* real_mixerGetNumDevs = 0;
@@ -142,7 +162,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) MMRESULT fwd_mmioDescend(HMMIO hmmio, LPMMCKINFO pmmcki, const MMCKINFO* pmmckiParent, UINT fuDescend)
+	__declspec(naked) MMRESULT WINAPI fwd_mmioDescend(HMMIO hmmio, LPMMCKINFO pmmcki, const MMCKINFO* pmmckiParent, UINT fuDescend)
 	{
 		__asm
 		{
@@ -150,7 +170,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) MMRESULT fwd_mmioCreateChunk(HMMIO hmmio, LPMMCKINFO pmmcki, UINT fuCreate)
+	__declspec(naked) MMRESULT WINAPI fwd_mmioCreateChunk(HMMIO hmmio, LPMMCKINFO pmmcki, UINT fuCreate)
 	{
 		__asm
 		{
@@ -158,7 +178,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) LONG fwd_mmioRead(HMMIO hmmio, HPSTR pch, LONG  cch)
+	__declspec(naked) LONG WINAPI fwd_mmioRead(HMMIO hmmio, HPSTR pch, LONG  cch)
 	{
 		__asm
 		{
@@ -166,7 +186,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) LONG fwd_mmioWrite(HMMIO hmmio, const char _huge* pch, LONG cch)
+	__declspec(naked) LONG WINAPI fwd_mmioWrite(HMMIO hmmio, const char _huge* pch, LONG cch)
 	{
 		__asm
 		{
@@ -174,7 +194,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) MMRESULT fwd_mmioClose(HMMIO hmmio, UINT fuClose)
+	__declspec(naked) MMRESULT WINAPI fwd_mmioClose(HMMIO hmmio, UINT fuClose)
 	{
 		__asm
 		{
@@ -182,7 +202,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) HMMIO fwd_mmioOpenA(LPSTR pszFileName, LPMMIOINFO pmmioinfo, DWORD fdwOpen)
+	__declspec(naked) HMMIO WINAPI fwd_mmioOpenA(LPSTR pszFileName, LPMMIOINFO pmmioinfo, DWORD fdwOpen)
 	{
 		__asm
 		{
@@ -190,7 +210,7 @@ extern "C" {
 		}
 	}
 
-	__declspec(naked) MMRESULT fwd_mmioAscend(HMMIO hmmio, LPMMCKINFO pmmcki, UINT fuAscend)
+	__declspec(naked) MMRESULT WINAPI fwd_mmioAscend(HMMIO hmmio, LPMMCKINFO pmmcki, UINT fuAscend)
 	{
 		__asm
 		{
@@ -216,24 +236,24 @@ void __cdecl ForwardExports()
 		MessageBoxA(NULL, "Could not find " PATCH_DLLNAME " in the system directory.", "Patching error", MB_OK);
 		ExitProcess(1);
 	}
-	real_mixerGetNumDevs = GetProcAddress(originalDll, "mixerGetNumDevs");
-	real_mixerGetLineInfoA = GetProcAddress(originalDll, "mixerGetLineInfoA");
-	real_mixerClose = GetProcAddress(originalDll, "mixerClose");
-	real_mixerGetLineControlsA = GetProcAddress(originalDll, "mixerGetLineControlsA");
-	real_mixerOpen = GetProcAddress(originalDll, "mixerOpen");
-	real_mixerGetControlDetailsA = GetProcAddress(originalDll, "mixerGetControlDetailsA");
-	real_mixerSetControlDetails = GetProcAddress(originalDll, "mixerSetControlDetails");
-	real_joyGetDevCapsA = GetProcAddress(originalDll, "joyGetDevCapsA");
-	real_joyGetPosEx = GetProcAddress(originalDll, "joyGetPosEx");
-	real_timeGetTime = GetProcAddress(originalDll, "timeGetTime");
-	real_mmioDescend = GetProcAddress(originalDll, "mmioDescend");
-	real_mmioCreateChunk = GetProcAddress(originalDll, "mmioCreateChunk");
-	real_mmioRead = GetProcAddress(originalDll, "mmioRead");
-	real_mmioWrite = GetProcAddress(originalDll, "mmioWrite");
-	real_mmioClose = GetProcAddress(originalDll, "mmioClose");
-	real_mmioOpenA = GetProcAddress(originalDll, "mmioOpenA");
-	real_mmioAscend = GetProcAddress(originalDll, "mmioAscend");
-	
+	real_mixerGetNumDevs = getAndCheckExport(originalDll, "mixerGetNumDevs");
+	real_mixerGetLineInfoA = getAndCheckExport(originalDll, "mixerGetLineInfoA");
+	real_mixerClose = getAndCheckExport(originalDll, "mixerClose");
+	real_mixerGetLineControlsA = getAndCheckExport(originalDll, "mixerGetLineControlsA");
+	real_mixerOpen = getAndCheckExport(originalDll, "mixerOpen");
+	real_mixerGetControlDetailsA = getAndCheckExport(originalDll, "mixerGetControlDetailsA");
+	real_mixerSetControlDetails = getAndCheckExport(originalDll, "mixerSetControlDetails");
+	real_joyGetDevCapsA = getAndCheckExport(originalDll, "joyGetDevCapsA");
+	real_joyGetPosEx = getAndCheckExport(originalDll, "joyGetPosEx");
+	real_timeGetTime = getAndCheckExport(originalDll, "timeGetTime");
+	real_mmioDescend = getAndCheckExport(originalDll, "mmioDescend");
+	real_mmioCreateChunk = getAndCheckExport(originalDll, "mmioCreateChunk");
+	real_mmioRead = getAndCheckExport(originalDll, "mmioRead");
+	real_mmioWrite = getAndCheckExport(originalDll, "mmioWrite");
+	real_mmioClose = getAndCheckExport(originalDll, "mmioClose");
+	real_mmioOpenA = getAndCheckExport(originalDll, "mmioOpenA");
+	real_mmioAscend = getAndCheckExport(originalDll, "mmioAscend");
+
 	MessageBoxA(NULL, "Completed ForwardExports().", "Debug", MB_OK);
 	return;
 }

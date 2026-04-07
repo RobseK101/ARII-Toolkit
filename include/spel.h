@@ -42,7 +42,7 @@ namespace Offsets
 	constexpr intptr_t Inifile__read_ini_value_setting = 0x00465460 - imageBaseAddress;
 	constexpr intptr_t Inifile__set_ini_filename = 0x004652F0 - imageBaseAddress;
 	constexpr intptr_t Inifile__write_ini_string_setting = 0x004653C0 - imageBaseAddress;
-	constexpr intptr_t Inifile__write_ini_value_setting = 00465400 - imageBaseAddress;
+	constexpr intptr_t Inifile__write_ini_value_setting = 0x00465400 - imageBaseAddress;
 
 	constexpr intptr_t initPlayerCarMov1 = 0x004334AE - imageBaseAddress;
 	constexpr intptr_t initPlayerCarMov2 = 0x004334D0 - imageBaseAddress;

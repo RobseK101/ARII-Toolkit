@@ -29,6 +29,7 @@ SOFTWARE.
 #include <string>
 #include <vector>
 #include <ren/Stringtools.hpp>
+#include "ren/Logging.h"
 
 namespace AR2Replacement
 {
@@ -50,6 +51,7 @@ namespace AR2Replacement
 		std::string result = currentIniSession->inifile.getValueString(_appName, _keyName);
 		size_t copyCount = std::min(result.size(), _bufferSize - 1);
 		strncpy(_buffer, result.c_str(), copyCount);
+		_buffer[copyCount] = 0;
 		return copyCount;
 	}
 
@@ -83,7 +85,26 @@ namespace AR2Replacement
 
 	int __cdecl getIniArgumentsOnline(const char* _compoundArgument, const char* _separatorList)
 	{
-		onlineArguments = ren::st::tokenize(std::string(_compoundArgument), _separatorList, "\t ");
+		ren::Logging::log_format("[REN] %s() called with _compoundArgument = ", __FUNCTION__);
+		if (_compoundArgument == nullptr) {
+			onlineArguments.clear();
+			ren::Logging::log_format("nullptr.\n");
+			return 0;
+		}
+		const char* separatorList = (_separatorList) ? _separatorList : ",=:";
+
+		ren::Logging::log_format("\"%s\" and separatorList = \"%s\".\n", _compoundArgument, separatorList);
+
+		onlineArguments = ren::st::tokenize(std::string(_compoundArgument), separatorList, "\t ");
+
+		ren::Logging::log_format("[REN] %s(): Token count: %d.\n", __FUNCTION__, (int)onlineArguments.size());
+		std::string tokenList = "[REN] Tokens: [BEGIN] ";
+		for (size_t i = 0; i < onlineArguments.size() - 1; i++) {
+			tokenList += onlineArguments[i] + "; ";
+		}
+		tokenList += onlineArguments.back();
+		tokenList += " [END]\n";
+		ren::Logging::log_std_string(tokenList);
 		return onlineArguments.size();
 	}
 
@@ -97,13 +118,15 @@ namespace AR2Replacement
 		}
 	}
 
-	const char* __cdecl getIniArgumentValueStr(int _argumentIndex, char* _buffer, size_t _maxArgumentLength)
+	// wrong mode of string return: _buffer is left unused!!!!
+	char* __cdecl getIniArgumentValueStr(int _argumentIndex, char* _buffer, size_t _maxArgumentLength)
 	{
 		if (_argumentIndex >= 0 && _argumentIndex < onlineArguments.size()) {
-			return onlineArguments[_argumentIndex].c_str();
+			strncpy(_buffer, onlineArguments[_argumentIndex].c_str(), _maxArgumentLength);
 		}
 		else {
-			return "";
+			_buffer[0] = 0;
 		}
+		return _buffer;
 	}
 }

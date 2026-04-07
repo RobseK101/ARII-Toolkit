@@ -36,6 +36,11 @@ target_include_directories(ModuleInifile
 		${PROJECT_SOURCE_DIR}/modules
 )
 
+target_link_libraries(ModuleInifile
+	PUBLIC
+		ModuleLogging
+)
+
 # Core Lib
 add_library(winmm SHARED
 	${PROJECT_SOURCE_DIR}/include/Exports.h
@@ -51,7 +56,7 @@ target_include_directories(winmm
 
 target_link_libraries(winmm 
 	PRIVATE
-		ModuleLogging
+		ModuleInifile
 )
 
 # Test utilities
