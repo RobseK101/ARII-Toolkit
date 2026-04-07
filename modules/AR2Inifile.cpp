@@ -118,7 +118,6 @@ namespace AR2Replacement
 		}
 	}
 
-	// wrong mode of string return: _buffer is left unused!!!!
 	char* __cdecl getIniArgumentValueStr(int _argumentIndex, char* _buffer, size_t _maxArgumentLength)
 	{
 		if (_argumentIndex >= 0 && _argumentIndex < onlineArguments.size()) {
