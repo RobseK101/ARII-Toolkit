@@ -15,3 +15,8 @@ Right now, this project compiles down to two usable files:
 - The game crashing during loading on any OS newer than Windows Me -> fixed
 - Requirement to insert the game CD -> removed
 - *Very* slow logging functionality (accessible through setting the **DEBUGON** key in the **HELPDESK** section of raser.ini) -> fixed
+
+## Other implemented features
+
+- An INI file reader/writer that bypasses the outdated GetPrivateProfile... and WritePrivateProfile... set of Windows API functions. 
+  This creates the possibility of INI value overrides.
