@@ -39,7 +39,7 @@ namespace AR2Replacement
 
 	void __cdecl setIniFilename(const char* _filename)
 	{
-		currentIniSession = inifileManager.openIniSession(_filename, true);
+		currentIniSession = inifileManager.openIniSession(_filename, false);
 	}
 
 	int __cdecl readIniStringSetting(const char* _appName, const char* _keyName, char* _buffer, size_t _bufferSize)
@@ -71,6 +71,7 @@ namespace AR2Replacement
 			return false;
 		}
 
+		currentIniSession->autocommit = true;
 		return currentIniSession->inifile.setValueString(_appName, _keyName, _source);
 	}
 
@@ -80,6 +81,7 @@ namespace AR2Replacement
 			return false;
 		}
 
+		currentIniSession->autocommit = true;
 		return currentIniSession->inifile.setValueString(_appName, _keyName, std::to_string(_value));
 	}
 
