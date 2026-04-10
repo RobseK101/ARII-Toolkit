@@ -24,6 +24,17 @@ SOFTWARE.
 
 #pragma once
 #include <cstdint>
+#include <Windows.h>
+
+constexpr IMAGE_FILE_HEADER SpelDatImageHeader = {
+    332,
+    3,
+    938094720,
+    0,
+    0,
+    224,
+    271
+};
 
 namespace Offsets
 {
@@ -50,5 +61,50 @@ namespace Offsets
 	constexpr intptr_t initPlayerCarMov4 = 0x00433532 - imageBaseAddress;
 	constexpr intptr_t initPlayerCarMov5 = 0x00433554 - imageBaseAddress;
 	constexpr intptr_t initPlayerCarMov6 = 0x00433592 - imageBaseAddress;
+
+	constexpr intptr_t hWnd_global = 0x0050B77C - imageBaseAddress;
+	constexpr intptr_t g_wndProcFunctions = 0x00510DB4 - imageBaseAddress;
 }
 
+namespace Session
+{
+    void init();
+
+    extern intptr_t imageBaseAddress;
+    extern char moduleFilepath[512];
+    extern char moduleFilename[256];
+}
+
+struct WndProcFunctions
+{
+    void *ptr_WM_COMMAND_func;
+    void *ptr_WM_CHAR_func;
+    void *ptr_WM_SYSCHAR_func;
+    void *ptr_WM_SYSKEYDOWN_func;
+    void *ptr_WM_MOUSEMOVE_func;
+    void *ptr_WM_LBUTTONDOWN_func;
+    void *ptr_WM_LBUTTONUP_func;
+    void *ptr_WM_RBUTTONDOWN_func;
+    void *ptr_WM_RBUTTONUP_func;
+    void *ptr_WM_KILLFOCUS_func;
+    void *ptr_WM_SETFOCUS_func;
+    void *ptr_WM_SETCURSOR_func;
+    void *ptr_WM_PAINT_func;
+    void *ptr_WM_KEYDOWN_func;
+    void *ptr_WM_INITMENU_func;
+    void *ptr_WM_MENUSELECT_func;
+    void *ptr_WM_DRAWITEM_func;
+    void *ptr_WM_MEASUREITEM_func;
+    void *ptr_WM_PALETTECHANGED_func;
+    void *ptr_WM_QUERYNEWPALETTE_func;
+    void *ptr_WM_CTLCOLORBTN_func;
+    void *ptr_WM_CTLCOLORDLG_func;
+    void *ptr_WM_CTLCOLOREDIT_func;
+    void *ptr_WM_CTLCOLORLISTBOX_func;
+    void *ptr_WM_CTLCOLORMSGBOX_func;
+    void *ptr_WM_CTLCOLORSCROLLBAR_func;
+    void *ptr_WM_COLORSTATIC_func;
+};
+
+#define $hWnd_global (*reinterpret_cast<HWND*>(Session::imageBaseAddress + Offsets::hWnd_global))
+#define $g_wndProcFunctions (*reinterpret_cast<WndProcFunctions*>(Session::imageBaseAddress + Offsets::g_wndProcFunctions))

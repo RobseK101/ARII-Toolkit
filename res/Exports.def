@@ -16,3 +16,6 @@ EXPORTS
 	mmioClose=fwd_mmioClose
 	mmioOpenA=fwd_mmioOpenA
 	mmioAscend=fwd_mmioAscend
+	mciSendCommandW=fwd_mciSendCommandW
+	mciGetErrorStringA=fwd_mciGetErrorStringA
+	mciSendCommandA=fwd_mciSendCommandA

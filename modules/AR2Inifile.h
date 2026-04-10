@@ -37,4 +37,7 @@ namespace AR2Replacement
 	int __cdecl getIniArgumentsOnline(const char* _compoundArgument, const char* _separatorList);
 	int __cdecl getIniArgumentValueInt(int _argumentIndex);
 	char* __cdecl getIniArgumentValueStr(int _argumentIndex, char* _buffer, size_t _maxArgumentLength); // _maxArgumentLength passed to strncpy 
+
+	// Addition
+	void closeIniFile(const char* _filename);
 }

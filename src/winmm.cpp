@@ -28,6 +28,8 @@ SOFTWARE.
 #include "spel.h"
 #include <ren/Logging.h>
 #include "AR2Inifile.h"
+#include <ostream>
+#include <Monitor.h>
 
 // Big thanks to "Silent" for releasing his ASI Loader as open source and therefore providing a nice way 
 // to patch a binary.
@@ -46,10 +48,64 @@ BYTE originalEntryPointCode[5] = {};
 BYTE* originalEntryPoint = nullptr;
 HINSTANCE hExecutableInstance = 0; // basically the address of the module (the exe file) in virtual memory.
 BYTE* moduleBaseAddress = 0; // renamed copy for clarity
+char moduleFilepath[512] = {};
 
 TrampolineBackup entryPointBackup = {};
 
 char strbuf256[256] = {"(c) 2026 RobseK"};
+
+bool checkFilenameI(const char* _fullPath, const char* _stem, const char* _extension)
+{
+	if (_fullPath == nullptr) {
+		return false;
+	}
+	char stem[64] = {};
+	char extension[16] = {};
+	if (_splitpath_s(_fullPath, NULL, 0, NULL, 0, stem, sizeof(stem), extension, sizeof(extension)) != 0) {
+		return false;
+	}
+
+	if (_stem && _stricmp(_stem, stem) != 0) {
+		return false;
+	}
+	if (_extension && _stricmp(_extension, extension) != 0) {
+		return false;
+	}
+	return true;
+}
+
+void runtimeCheckFunction(std::ostream& _ostr) 
+{
+	_ostr << "Session::imageBaseAddress = 0x" << std::hex << Session::imageBaseAddress << std::dec << '\n';
+	_ostr << "$hWnd_global = 0x" << $hWnd_global << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_COMMAND_func = 0x" << $g_wndProcFunctions.ptr_WM_COMMAND_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CHAR_func = 0x" << $g_wndProcFunctions.ptr_WM_CHAR_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_SYSCHAR_func = 0x" << $g_wndProcFunctions.ptr_WM_SYSCHAR_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_SYSKEYDOWN_func = 0x" << $g_wndProcFunctions.ptr_WM_SYSKEYDOWN_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_MOUSEMOVE_func = 0x" << $g_wndProcFunctions.ptr_WM_MOUSEMOVE_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_LBUTTONDOWN_func = 0x" << $g_wndProcFunctions.ptr_WM_LBUTTONDOWN_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_LBUTTONUP_func = 0x" << $g_wndProcFunctions.ptr_WM_LBUTTONUP_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_RBUTTONDOWN_func = 0x" << $g_wndProcFunctions.ptr_WM_RBUTTONDOWN_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_RBUTTONUP_func = 0x" << $g_wndProcFunctions.ptr_WM_RBUTTONUP_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_KILLFOCUS_func = 0x" << $g_wndProcFunctions.ptr_WM_KILLFOCUS_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_SETFOCUS_func = 0x" << $g_wndProcFunctions.ptr_WM_SETFOCUS_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_SETCURSOR_func = 0x" << $g_wndProcFunctions.ptr_WM_SETCURSOR_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_PAINT_func = 0x" << $g_wndProcFunctions.ptr_WM_PAINT_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_KEYDOWN_func = 0x" << $g_wndProcFunctions.ptr_WM_KEYDOWN_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_INITMENU_func = 0x" << $g_wndProcFunctions.ptr_WM_INITMENU_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_MENUSELECT_func = 0x" << $g_wndProcFunctions.ptr_WM_MENUSELECT_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_DRAWITEM_func = 0x" << $g_wndProcFunctions.ptr_WM_DRAWITEM_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_MEASUREITEM_func = 0x" << $g_wndProcFunctions.ptr_WM_MEASUREITEM_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_PALETTECHANGED_func = 0x" << $g_wndProcFunctions.ptr_WM_PALETTECHANGED_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_QUERYNEWPALETTE_func = 0x" << $g_wndProcFunctions.ptr_WM_QUERYNEWPALETTE_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CTLCOLORBTN_func = 0x" << $g_wndProcFunctions.ptr_WM_CTLCOLORBTN_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CTLCOLORDLG_func = 0x" << $g_wndProcFunctions.ptr_WM_CTLCOLORDLG_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CTLCOLOREDIT_func = 0x" << $g_wndProcFunctions.ptr_WM_CTLCOLOREDIT_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CTLCOLORLISTBOX_func = 0x" << $g_wndProcFunctions.ptr_WM_CTLCOLORLISTBOX_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CTLCOLORMSGBOX_func = 0x" << $g_wndProcFunctions.ptr_WM_CTLCOLORMSGBOX_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_CTLCOLORSCROLLBAR_func = 0x" << $g_wndProcFunctions.ptr_WM_CTLCOLORSCROLLBAR_func << '\n';
+	_ostr << "$g_wndProcFunctions.ptr_WM_COLORSTATIC_func = 0x" << $g_wndProcFunctions.ptr_WM_COLORSTATIC_func << '\n';
+}
 
 void __cdecl cdeclNull() { return; }
 void __stdcall stdcallNull() { return; }
@@ -118,6 +174,7 @@ void ApplyPatches()
 {
 	// Do stuff:
 	ren::Logging::init(new ren::LogfileModule("ren_debug.txt"));
+	Session::init();
 
 	// Replaces the logger with the new one
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Debug__setDebugOptions, &ren::Logging::setDebugOptions);
@@ -145,21 +202,26 @@ void ApplyPatches()
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__write_ini_string_setting, &AR2Replacement::writeIniStringSetting);
 	InstallOneWayTrampoline(moduleBaseAddress + Offsets::Inifile__write_ini_value_setting, &AR2Replacement::writeIniValueSetting);
 
-	MessageBoxA(NULL, "Completed ApplyPatches().", "Debug", MB_OK);
+#ifdef _DEBUG
+	MessageBoxA(NULL, "Completed ApplyPatches().\nNow also starting the monitor thread...", "Debug", MB_OK);
+	createMonitorThread(100, 500, 10, "ren_monitor_log.txt", &runtimeCheckFunction);
+#endif
+
 	return;
 }
 
 void* RestoreEntryPoint()
 {
-	/*
-	memcpy(originalEntryPoint, originalEntryPointCode, sizeof(originalEntryPointCode));
-	*/
 	UninstallOneWayTrampoline(entryPointBackup);
+
+#ifdef _DEBUG
 	MessageBoxA(NULL, "Completed RestoreEntryPoint().", "Debug", MB_OK);
+#endif
+
 	return entryPointBackup.address;
 }
 
-void __declspec(naked) Main_DoInit()
+void __declspec(naked) Main_DoInitAll()
 {
 	_asm
 	{
@@ -178,6 +240,16 @@ void __declspec(naked) Main_DoInit()
 	}*/
 }
 
+void __declspec(naked) Main_DoInitForwardOnly()
+{
+	__asm
+	{
+		call ForwardExports
+		call RestoreEntryPoint
+		jmp eax
+	}
+}
+
 // Main DLL entry point:
 BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -188,34 +260,34 @@ BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpvReserved)
 			hExecutableInstance = GetModuleHandleA(NULL);
 
 			// Unused; seems to be a remnant of the copied code by Silent.
-			char buffer[512] = {};
-			GetModuleFileNameA(hExecutableInstance, buffer, sizeof(buffer));
+			GetModuleFileNameA(hExecutableInstance, moduleFilepath, sizeof(moduleFilepath));
+			bool correctFilename = checkFilenameI(moduleFilepath, "spel", nullptr);
 
 			if (hExecutableInstance) {
 				moduleBaseAddress = reinterpret_cast<BYTE*>(hExecutableInstance);
+				Session::imageBaseAddress = reinterpret_cast<intptr_t>(moduleBaseAddress);
 
 				// Get the entry point location:
 				IMAGE_DOS_HEADER* dosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(moduleBaseAddress);
 				IMAGE_NT_HEADERS* ntHeader = reinterpret_cast<IMAGE_NT_HEADERS*>(reinterpret_cast<DWORD>(moduleBaseAddress) + dosHeader->e_lfanew);
+
+				bool correctExe =
+					ntHeader->FileHeader.Machine == SpelDatImageHeader.Machine
+					&& ntHeader->FileHeader.NumberOfSections == SpelDatImageHeader.NumberOfSections
+					&& ntHeader->FileHeader.TimeDateStamp == SpelDatImageHeader.TimeDateStamp
+					&& ntHeader->FileHeader.PointerToSymbolTable == SpelDatImageHeader.PointerToSymbolTable
+					&& ntHeader->FileHeader.NumberOfSymbols == SpelDatImageHeader.NumberOfSymbols
+					&& ntHeader->FileHeader.SizeOfOptionalHeader == SpelDatImageHeader.SizeOfOptionalHeader
+					&& ntHeader->FileHeader.Characteristics == SpelDatImageHeader.Characteristics;
+
 				BYTE* entryPoint = reinterpret_cast<BYTE*>(reinterpret_cast<DWORD>(moduleBaseAddress) + ntHeader->OptionalHeader.AddressOfEntryPoint);
 
-				/*
-				// Unprotect the entry point:
-				DWORD oldProtect;
-				VirtualProtect(entryPoint, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
-
-				// back up the original code
-				memcpy(originalEntryPointCode, entryPoint, sizeof(originalEntryPointCode));
-
-				// Patch to call our own entry point:
-				int newEntryPoint = reinterpret_cast<int>(&Main_DoInit) - (reinterpret_cast<int>(entryPoint) + 5);
-				entryPoint[0] = 0xE9;
-				memcpy(entryPoint + 1, &newEntryPoint, sizeof(originalEntryPointCode) - 1);
-
-				originalEntryPoint = entryPoint;
-				*/
-
-				entryPointBackup = InstallOneWayTrampoline(entryPoint, &Main_DoInit);
+				if (correctFilename && correctExe) {
+					entryPointBackup = InstallOneWayTrampoline(entryPoint, &Main_DoInitAll);
+				}
+				else {
+					entryPointBackup = InstallOneWayTrampoline(entryPoint, &Main_DoInitForwardOnly);
+				}
 			}
 			break;
 		}

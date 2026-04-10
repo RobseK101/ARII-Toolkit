@@ -51,7 +51,8 @@ void checkAndCommitExport(void** _destination, void* _value, const char* _name)
 		if (_name) {
 			snprintf(msgBuffer, sizeof(msgBuffer), "Exported function \"%s\" was not found.", _name);
 		}
-		MessageBoxA(NULL, msgBuffer, "Error", MB_OK);
+		MessageBoxA(NULL, msgBuffer, "Error", MB_OK | MB_SYSTEMMODAL | MB_ICONERROR);
+		ExitProcess(1);
 	}
 	*_destination = _value;
 }
@@ -81,6 +82,9 @@ extern "C" {
 	void* real_mmioClose = 0;
 	void* real_mmioOpenA = 0;
 	void* real_mmioAscend = 0;
+	void* real_mciSendCommandW = 0;
+	void* real_mciGetErrorStringA = 0;
+	void* real_mciSendCommandA = 0;
 
 	__declspec(naked) UINT WINAPI fwd_mixerGetNumDevs(void)
 	{
@@ -217,6 +221,30 @@ extern "C" {
 			jmp real_mmioAscend
 		}
 	}
+
+	__declspec(naked) MCIERROR WINAPI fwd_mciSendCommandW(MCIDEVICEID mciId, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+	{
+		__asm
+		{
+			jmp real_mciSendCommandW
+		}
+	}
+
+	__declspec(naked) BOOL WINAPI fwd_mciGetErrorStringA(MCIERROR mcierr, LPSTR pszText, UINT cchText) 
+	{
+		__asm
+		{
+			jmp real_mciGetErrorStringA
+		}
+	}
+
+	__declspec(naked) MCIERROR WINAPI fwd_mciSendCommandA(MCIDEVICEID mciId, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2) 
+	{
+		__asm
+		{
+			jmp real_mciSendCommandA
+		}
+	}
 }
 
 void __cdecl ForwardExports()
@@ -226,14 +254,14 @@ void __cdecl ForwardExports()
 	GetSystemDirectoryA(pathBuffer, sizeof(pathBuffer));
 	size_t length = strlen(pathBuffer);
 	if (length && length + 1 + strlen(PATCH_DLLNAME) >= sizeof(pathBuffer)) {
-		MessageBoxA(NULL, "DLL path buffer overflow.", "Patching error", MB_OK);
+		MessageBoxA(NULL, "DLL path buffer overflow.", "Patching error", MB_OK | MB_SYSTEMMODAL | MB_ICONERROR);
 		ExitProcess(1);
 	}
 	pathBuffer[length] = '\\';
 	strcpy(pathBuffer + length + 1, PATCH_DLLNAME);
 	originalDll = LoadLibraryA(pathBuffer);
 	if (originalDll == NULL) {
-		MessageBoxA(NULL, "Could not find " PATCH_DLLNAME " in the system directory.", "Patching error", MB_OK);
+		MessageBoxA(NULL, "Could not find " PATCH_DLLNAME " in the system directory.", "Patching error", MB_OK | MB_SYSTEMMODAL | MB_ICONERROR);
 		ExitProcess(1);
 	}
 	real_mixerGetNumDevs = getAndCheckExport(originalDll, "mixerGetNumDevs");
@@ -253,7 +281,13 @@ void __cdecl ForwardExports()
 	real_mmioClose = getAndCheckExport(originalDll, "mmioClose");
 	real_mmioOpenA = getAndCheckExport(originalDll, "mmioOpenA");
 	real_mmioAscend = getAndCheckExport(originalDll, "mmioAscend");
+	real_mciSendCommandW = getAndCheckExport(originalDll, "mciSendCommandW");
+	real_mciGetErrorStringA = getAndCheckExport(originalDll, "mciGetErrorStringA");
+	real_mciSendCommandA = getAndCheckExport(originalDll, "mciSendCommandA");
 
+#ifdef _DEBUG
 	MessageBoxA(NULL, "Completed ForwardExports().", "Debug", MB_OK);
+#endif
+
 	return;
 }

@@ -1,0 +1,4 @@
+Imports from winmm.dll that menu.exe requires:
+
+mciSendCommandA
+mciGetErrorStringA

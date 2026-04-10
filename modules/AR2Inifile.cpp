@@ -130,4 +130,16 @@ namespace AR2Replacement
 		}
 		return _buffer;
 	}
+
+    void closeIniFile(const char *_filename)
+    {
+		std::string filenameUpper = ren::st::toUpper<std::string>(_filename);
+		if (currentIniSession && filenameUpper == ren::st::toUpper(currentIniSession->filename)) {
+			inifileManager.closeIniSession(currentIniSession);
+			currentIniSession = nullptr;
+		}
+		else {
+			inifileManager.closeIniSession(_filename);
+		}
+    }
 }
